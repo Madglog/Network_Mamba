@@ -1,0 +1,35 @@
+# Strong mode -- admin-switched, full pipeline.
+# Full Mamba, K=32, both heads (anomaly via the projection MLP), SHAP per alert.
+mode: strong
+
+data:
+  max_packets: 32          # K
+  n_features: 13
+  mask_prob: 0.15
+  n_classes: 8             # benign + 7 attack categories
+
+model:
+  d_model: 128
+  n_layers: 4
+  d_state: 16
+  d_conv: 4
+  expand: 2
+  proj_dim: 32
+  head_hidden: 64
+  svdd_percentile: 99.0    # 1% FPR target
+
+train:
+  batch_size: 256
+  lr: 0.001
+  weight_decay: 0.0001
+  epochs_pretrain: 10
+  epochs_finetune: 15
+  epochs_anomaly: 10
+  focal_gamma: 2.0
+  replay_per_class: 200
+  device: auto
+
+runtime:
+  use_classifier: true
+  use_anomaly: true
+  use_shap: true

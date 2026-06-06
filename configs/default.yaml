@@ -1,0 +1,36 @@
+# Default mode -- low power, always on.
+# Smaller Mamba, short sequence (K=8), only the anomaly head, no SHAP.
+# Both known and novel attacks are caught via the anomaly score alone.
+mode: default
+
+data:
+  max_packets: 8           # K (short -> cheaper)
+  n_features: 13
+  mask_prob: 0.15
+  n_classes: 8
+
+model:
+  d_model: 64
+  n_layers: 2
+  d_state: 16
+  d_conv: 4
+  expand: 2
+  proj_dim: 32
+  head_hidden: 64
+  svdd_percentile: 99.0
+
+train:
+  batch_size: 256
+  lr: 0.001
+  weight_decay: 0.0001
+  epochs_pretrain: 10
+  epochs_finetune: 15
+  epochs_anomaly: 10
+  focal_gamma: 2.0
+  replay_per_class: 200
+  device: auto
+
+runtime:
+  use_classifier: false
+  use_anomaly: true
+  use_shap: false

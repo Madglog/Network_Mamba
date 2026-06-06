@@ -1,0 +1,25 @@
+# Core scientific stack (CPU-runnable, no deep-learning dependency)
+numpy>=1.24
+pandas>=2.0
+scipy>=1.10
+scikit-learn>=1.3
+matplotlib>=3.7
+joblib>=1.3
+tqdm>=4.65
+pyyaml>=6.0
+
+# Classical baselines
+xgboost>=2.0
+
+# Deep-learning core (Mamba encoder + heads + training).
+# Requires Python 3.10-3.12. Install separately if your interpreter is unsupported:
+#   pip install "torch>=2.1"
+torch>=2.1
+
+# Explainability
+shap>=0.44
+
+# --- Optional extras (uncomment as needed) ---
+# umap-learn>=0.5          # UMAP embedding visualisation (t-SNE ships with scikit-learn)
+# nfstream>=6.5            # real flow extraction from pcap (Stage 0 data pipeline)
+# mamba-ssm>=2.0           # CUDA selective-scan kernel; the repo ships a pure-PyTorch fallback

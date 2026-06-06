@@ -1,0 +1,51 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.python-version
+
+# ---- Project artifacts ----
+artifacts/
+checkpoints/
+runs/
+logs/
+*.pt
+*.pth
+*.ckpt
+*.joblib
+*.pkl
+data/raw/
+data/processed/
+data/*.npz
+!flowmamba/data/
+
+# ---- Harness / tooling internals ----
+.claude/
+
+# ---- Notebooks ----
+.ipynb_checkpoints/
+
+# ---- LaTeX build artifacts (keep .tex and .pdf) ----
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.nav
+*.snm
+
+# ---- OS / editor ----
+.DS_Store
+.idea/
+.vscode/
+*.swp
