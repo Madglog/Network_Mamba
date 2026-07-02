@@ -146,11 +146,36 @@ python -m flowmamba.cli evaluate --mode strong
 
 ## Moving to real data
 
-The synthetic generator is a development stand-in. For the real experiments wire
-`flowmamba/data/ciciot.py::flows_from_pcap` to a packet reader (NFStream plugin
-or Scapy) to emit first-K-packet sequences from CICIoT2023 / IoT-23 pcaps. The
-published aggregated CSVs feed the classical baselines via `load_aggregated_csv`
-but cannot drive the Mamba arm (they have already discarded packet order).
+The synthetic generator is a development stand-in. Real captures flow in through
+`flowmamba/data/ciciot.py`, which extracts first-K-packet sequences from pcaps
+with **dpkt** (`pip install -e ".[pcap]"`):
+
+```bash
+# IoT-23 scenario: label each pcap flow from its Zeek conn.log.labeled
+python -m flowmamba.cli prep-pcap --pcap capture.pcap \
+    --conn-log conn.log.labeled --out data/real.npz
+# whole IoT-23 tree (pairs each pcap with its conn.log automatically)
+python -m flowmamba.cli prep-pcap --pcap-dir /path/to/iot23 --out data/real.npz
+# CICIoT-style single-attack pcap (one fixed category)
+python -m flowmamba.cli prep-pcap --pcap ddos.pcap --label DDoS --out data/real.npz
+
+# then train / evaluate / baseline on the real dataset
+python -m flowmamba.cli train-all --npz data/real.npz --epochs 8
+python -m flowmamba.cli baselines  --npz data/real.npz
+```
+
+`prep-pcap` groups packets into bidirectional 5-tuple flows (originator =
+first-seen sender, so direction and keys line up with Zeek's orig/resp), emits
+the 13-feature payload-free schema, and writes the same `flows/labels/lengths`
+`.npz` the synthetic generator produces. `--max-flows` bounds memory on large
+captures. Label mapping lives in `IOT23_CATEGORY_MAP` / `CICIOT_CATEGORY_MAP`
+(coarse and editable to your taxonomy).
+
+**IoT-23 lighter version** (Zeek `conn.log.labeled` only, no pcaps): those are
+aggregated flow records, so they drive the classical baselines but *not* the
+Mamba arm. Point the baselines straight at one with
+`baselines --zeek-conn conn.log.labeled` (or use `load_aggregated_csv` for the
+published CICIoT CSVs).
 
 Datasets: **CICIoT2023** (primary), **TON_IoT** (cross-dataset generalisation),
 **IoT-23** (real malware: Mirai, Torii, Okiru, Gafgyt).
@@ -161,9 +186,10 @@ Datasets: **CICIoT2023** (primary), **TON_IoT** (cross-dataset generalisation),
 
 Implemented: feature schema, synthetic data, preprocessing, pure-PyTorch Mamba
 encoder, both heads, all three training stages, the continual-learning update,
-classical baselines, metrics, FGSM, zero-day split, SHAP, two-mode runner, CLI.
+classical baselines, metrics, FGSM, zero-day split, SHAP, two-mode runner, CLI,
+**real pcap extraction (dpkt) with IoT-23 Zeek-label joining + `prep-pcap`**.
 
-Next: real pcap extraction (NFStream), warm-start from a public Mamba checkpoint,
-ET-BERT / CNN-BiLSTM comparison arms, mixed-precision int8 quantisation + gateway
-latency benchmark, t-SNE/UMAP embedding analysis.
+Next: warm-start from a public Mamba checkpoint, ET-BERT / CNN-BiLSTM comparison
+arms, mixed-precision int8 quantisation + gateway latency benchmark, t-SNE/UMAP
+embedding analysis.
 ```

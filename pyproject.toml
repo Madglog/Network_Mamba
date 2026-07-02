@@ -24,8 +24,9 @@ dependencies = [
 [project.optional-dependencies]
 dl = ["torch>=2.1", "shap>=0.44"]
 baselines = ["xgboost>=2.0"]
+pcap = ["dpkt>=1.9"]
 viz = ["matplotlib>=3.7", "umap-learn>=0.5"]
-all = ["torch>=2.1", "shap>=0.44", "xgboost>=2.0", "matplotlib>=3.7", "umap-learn>=0.5"]
+all = ["torch>=2.1", "shap>=0.44", "xgboost>=2.0", "dpkt>=1.9", "matplotlib>=3.7", "umap-learn>=0.5"]
 
 [project.scripts]
 flowmamba = "flowmamba.cli:main"

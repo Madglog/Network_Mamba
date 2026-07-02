@@ -11,6 +11,10 @@ pyyaml>=6.0
 # Classical baselines
 xgboost>=2.0
 
+# Real-data pcap extraction (CICIoT2023 / IoT-23 first-K-packet sequences).
+# Pure-Python, no native deps; reads classic pcap + pcapng.
+dpkt>=1.9
+
 # Deep-learning core (Mamba encoder + heads + training).
 # Requires Python 3.10-3.12. Install separately if your interpreter is unsupported:
 #   pip install "torch>=2.1"
@@ -21,5 +25,5 @@ shap>=0.44
 
 # --- Optional extras (uncomment as needed) ---
 # umap-learn>=0.5          # UMAP embedding visualisation (t-SNE ships with scikit-learn)
-# nfstream>=6.5            # real flow extraction from pcap (Stage 0 data pipeline)
+# nfstream>=6.5            # alternative flow extractor (dpkt is the default, see data/ciciot.py)
 # mamba-ssm>=2.0           # CUDA selective-scan kernel; the repo ships a pure-PyTorch fallback

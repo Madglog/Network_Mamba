@@ -1,0 +1,122 @@
+\documentclass[11pt,a4paper]{article}
+
+% ---- Packages ----------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=0.9in]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks,colorlinks=true,linkcolor=black,citecolor=teal,urlcolor=teal]{hyperref}
+\usepackage{parskip}
+
+% ---- Color palette -----------------------------------------------------
+\definecolor{accent}{HTML}{0F766E}
+\definecolor{cool}{HTML}{1E3A8A}
+\definecolor{neutral}{HTML}{475569}
+\definecolor{neutrallight}{HTML}{F1F5F9}
+
+% ---- Header / Footer ---------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Mamba IoT Anomaly Detection}
+\fancyhead[R]{\small Madhav Dogra}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ---- Section formatting (tighter) --------------------------------------
+\titleformat{\section}{\normalfont\large\bfseries\color{cool}}{}{0em}{}
+\titlespacing*{\section}{0pt}{6pt}{2pt}
+\setlength{\parskip}{3pt}
+\newcommand{\hd}[1]{\textbf{\textcolor{accent}{#1}}}
+
+% =======================================================================
+\begin{document}
+
+\begin{center}
+{\Large\bfseries Results --- Flow-Pattern Anomaly Detection at the IoT Gateway} \\[2pt]
+{\small Madhav Dogra \quad$\cdot$\quad 2026-06-15 \quad$\cdot$\quad IoT-23 \texttt{CTU-IoT-Malware-Capture-34-1} (Mirai)}
+\end{center}
+\vspace{-2pt}
+
+\section*{Setup}
+\hd{Data.} IoT-23 scenario 34-1 pcap (120.5\,MB, 233{,}865 packets) $\rightarrow$ \textbf{4{,}662 flows}, each the first $K{=}32$ packets $\times$ 13 payload-free features; labels joined from the Zeek \texttt{conn.log.labeled} by 5-tuple. Classes: Mirai 4055, Benign 290, DDoS 211, Recon 106. Split 70/15/15 (test 700).\\
+\hd{Model.} Mamba encoder ($d{=}128$, 4 layers) $+$ softmax classifier $+$ one-class deep-SVDD anomaly head.\\
+\hd{Run.} 3 stages $\times$ 8 epochs, CPU (Apple M3 Pro). Extraction $\approx$\,1.5\,s; \textbf{training 659\,s ($\approx$11\,min)}; inference \textbf{5.1\,ms/flow}.
+
+\section*{Results}
+
+\begin{minipage}[t]{0.46\textwidth}
+\centering
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Accuracy            & \textbf{96.3\,\%} \\
+Macro-F1 (4 classes)& \textbf{0.793} \\
+Weighted-F1         & 0.963 \\
+\addlinespace
+Anomaly ROC-AUC     & \textbf{0.994} \\
+Anomaly PR-AUC      & 0.999 \\
+\addlinespace
+Latency p50/p95/p99 & 5.1/5.5/6.0\,ms \\
+\bottomrule
+\end{tabular}
+
+\vspace{8pt}
+{\small\textit{Confusion matrix} (rows true, cols pred)}\\[2pt]
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{@{}l rrrr@{}}
+\toprule
+ & B & D & R & M \\
+\midrule
+Benign (B) & 47 & 0 & 3 & 0 \\
+DDoS\ \,(D) & 2 & 19 & \textbf{21} & 0 \\
+Recon (R) & 0 & 0 & 18 & 0 \\
+Mirai (M) & 0 & 0 & 0 & 590 \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.50\textwidth}
+\centering
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\textbf{Class} & \textbf{P} & \textbf{R} & \textbf{F1} & \textbf{N} \\
+\midrule
+Benign & 0.959 & 0.940 & 0.949 & 50 \\
+DDoS   & 1.000 & 0.452 & 0.623 & 42 \\
+Recon  & 0.429 & 1.000 & 0.600 & 18 \\
+Mirai  & 1.000 & 1.000 & 1.000 & 590 \\
+\midrule
+Macro avg    & 0.847 & 0.848 & \textbf{0.793} & 700 \\
+Weighted avg & 0.982 & 0.963 & 0.963 & 700 \\
+\bottomrule
+\end{tabular}
+
+\vspace{8pt}
+\raggedright
+{\small
+\hd{Takeaway.}
+\begin{itemize}[leftmargin=1.1em, itemsep=1pt, topsep=2pt]
+  \item Benign-trained anomaly head detects attacks at \textbf{ROC-AUC 0.994} on real malware traffic --- the zero-day capability.
+  \item 96.3\,\% accuracy; honest macro-F1 0.793 (single, Mirai-heavy capture).
+  \item Main error: DDoS read as Recon (similar short-packet patterns); both classes are small.
+\end{itemize}}
+\end{minipage}
+
+\vspace{4pt}
+\noindent\textcolor{neutral}{\footnotesize First real-data run, single scenario. Adding more IoT-23 captures (class balance) and per-class focal weights are the next steps. Synthetic-data runs omitted (trivially separable by construction).}
+
+\end{document}

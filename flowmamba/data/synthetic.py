@@ -13,7 +13,7 @@ hypothesis the real experiment tests.
 
 from __future__ import annotations
 
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -208,11 +208,34 @@ def make_synthetic_flows(
 
 
 def train_val_test_split(
-    n: int, seed: int = 1337, ratios: Tuple[float, float, float] = (0.7, 0.15, 0.15)
+    n: int,
+    seed: int = 1337,
+    ratios: Tuple[float, float, float] = (0.7, 0.15, 0.15),
+    labels: Optional[np.ndarray] = None,
 ):
-    """Return shuffled index arrays for a train/val/test split."""
+    """Return shuffled index arrays for a train/val/test split.
+
+    If ``labels`` is given the split is *stratified*: each class is split by the
+    same ratios independently, so rare attack classes (e.g. Recon with ~100
+    flows) are guaranteed representation in train, val and test. Without
+    ``labels`` the split is a single random permutation, as before.
+    """
     rng = np.random.default_rng(seed)
-    idx = rng.permutation(n)
-    n_train = int(ratios[0] * n)
-    n_val = int(ratios[1] * n)
-    return idx[:n_train], idx[n_train : n_train + n_val], idx[n_train + n_val :]
+    if labels is None:
+        idx = rng.permutation(n)
+        n_train = int(ratios[0] * n)
+        n_val = int(ratios[1] * n)
+        return idx[:n_train], idx[n_train : n_train + n_val], idx[n_train + n_val :]
+
+    labels = np.asarray(labels)
+    tr, va, te = [], [], []
+    for c in np.unique(labels):
+        c_idx = rng.permutation(np.flatnonzero(labels == c))
+        n_train = int(ratios[0] * len(c_idx))
+        n_val = int(ratios[1] * len(c_idx))
+        tr.append(c_idx[:n_train])
+        va.append(c_idx[n_train : n_train + n_val])
+        te.append(c_idx[n_train + n_val :])
+    # Concatenate per-class slices, then reshuffle so batches aren't class-ordered.
+    pack = lambda parts: rng.permutation(np.concatenate(parts)) if parts else np.array([], dtype=int)
+    return pack(tr), pack(va), pack(te)
